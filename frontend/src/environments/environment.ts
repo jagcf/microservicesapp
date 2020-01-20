@@ -3,7 +3,12 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  
+    production: false,
+    rootUrlHost: "cf-aue1-docker-node-0011.cf-cd.com",
+    rootUrlPort : 32898,
+    newsResource : 'topnews'
+  
 };
 
 /*
