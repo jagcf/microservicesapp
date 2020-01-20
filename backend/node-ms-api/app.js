@@ -51,7 +51,7 @@ initDatabases().then(dbs => {
     //console.log(JSON.parse(body))
   });
   app.get('/', function (req, res) {
-    res.send(200, "Hello" + new Date().getTime());
+    res.send(200, "Hello I am ready" + new Date().getTime());
   });
 
   app.listen(port, function (error) {

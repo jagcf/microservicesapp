@@ -1,0 +1,53 @@
+# We label our stage as ‘builder’
+FROM node:10-alpine as builder
+
+COPY package.json package-lock.json ./
+
+## Storing node modules on a separate layer will prevent unnecessary npm installs at each build
+RUN npm i && mkdir /cfmsdemo-ng-app && mv ./node_modules ./cfmsdemo-ng-app
+
+WORKDIR /cfmsdemo-ng-app
+
+COPY . .
+
+## Build the angular app in production mode and store the artifacts in dist folder
+RUN $(npm bin)/ng build --prod --output-path=dist
+
+RUN  ls -ltr /cfmsdemo-ng-app/dist
+
+
+### STAGE 2: Setup ###
+
+FROM nginx:1.14.1-alpine
+
+## Copy our default nginx config
+COPY nginx.conf /etc/nginx/conf.d/
+
+## Remove default nginx website
+RUN rm -rf /usr/share/nginx/html/*
+
+## From ‘builder’ stage copy over the artifacts in dist folder to default nginx public folder
+COPY --from=builder /cfmsdemo-ng-app/dist /usr/share/nginx/html
+
+RUN echo "--- starting nginx ---"
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+
+
+## https://medium.com/@avatsaev/create-efficient-angular-docker-images-with-multi-stage-builds-907e2be3008d
+
+## docker build -t shotstories/001 .
+
+##docker run -p 8080:80 shotstories/001
+
+
+##az container create --resource-group sstrResourceGroup --name ss-demo-app --image jagshetty.azurecr.io/shotstories:001 --cpu 1 --memory 1 --registry-login-server asdasd.azurecr.io --registry-username sadasd --registry-password  dsaasds --dns-name-label ssdemoapp --ports 80
+
+##az container create --resource-group sstrResourceGroup --name ss-demo-app --image jagshetty.azurecr.io/shotstories:001 --cpu 1 --memory 1 --registry-login-server jagshetty.azurecr.io --registry-username jagshetty --registry-password WNzzKckW4AXaR58gasB8f72m/vO95W9E --dns-name-label ssdemoapp --ports 80
+##jag@Azure:~$ az container show --resource-group ssResourceGroup --name ss-demo-app --query instanceView.state
+##"Running"
+##jag@Azure:~$ az container show --resource-group ssResourceGroup --name ss-demo-app --query ipAddress.fqdn
+#"ssdemoapp.westus.azurecontainer.io"
+# testing automated build using gcp codebjuild
