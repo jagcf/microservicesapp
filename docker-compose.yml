@@ -1,0 +1,59 @@
+version: '3'
+services:
+ mongodb:
+    image: mongo
+#    environment :
+#       - MONGO_INITDB_DATABASE=ssdevdb
+#      - MONGO_INITDB_ROOT_USERNAME=ssdevroot
+#      - MONGO_INITDB_ROOT_PASSWORD=ssdevrootpasswd
+
+    volumes:
+#        - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+        - mongo-data:/data/db
+    ports:
+        - 27017:27017
+    networks:
+           - newsfeed-network
+
+ node-api :
+  
+    image: node-ms-apis:3.0
+    environment:
+       - mongo_host=mongodb
+       - mongo_port=27017
+       - PORT=3000
+    ports:
+        -  3000:3000
+    depends_on:
+         - mongodb
+    networks:
+          - newsfeed-network
+ java-api:
+    image: java-ms-apis:dc2.0
+    environment:
+       - APP_FEED_MONGOHOST=mongodb
+       - APP_FEED_MONGOPORT=27017
+       - PORT=3000
+    ports:
+        -  8085:8085
+    depends_on:
+         - mongodb
+         - node-api
+    networks:
+          - newsfeed-network
+ frontend-web-app :
+    image: ang-ms-fe:3.0
+    environment:
+       - mongo_host=mongodb
+       - mongo_port=27017
+    ports:
+        -  80:80
+    depends_on:
+         - java-api
+         - node-api 
+    networks:
+          - newsfeed-network
+volumes:
+  mongo-data:
+networks:
+  newsfeed-network:
